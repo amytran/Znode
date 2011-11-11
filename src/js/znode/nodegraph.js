@@ -530,13 +530,24 @@ function NodeGraph(){
   
   function defaultNode(){
     
+	/*a0t win.width = 250px, win.height = 510px
+	 * defaultWidth = 100
+	 * defaultHeight = 50
+	 * create new node with xp, yp, w, h, noDelete = true
+	 */
+	 
+	console.log("win.width: \n" + win.width());
+	console.log("win.height: \n" + win.height());
+	console.log("width: \n" + defaultWidth);
+	console.log("height: \n" + defaultHeight);
+	
     var temp = new Node(win.width() / 2 - defaultWidth / 2, 
                         win.height() / 2 - defaultHeight / 2,
                         defaultWidth, defaultHeight, true);
-    temp.txt[0].focus();
+    temp.txt[0].focus();  //focus the cursor in the node for text input
     currentNode = temp;
   }
-  defaultNode();
+  defaultNode(); //call to create the default node
 
   this.fromJSON = function(data){
     clear();

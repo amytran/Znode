@@ -31,6 +31,7 @@ $(function(){
     window.open("http://www.zreference.com/znode", "_blank");
   });
   
+  //when save option is click, call saveFile function
   $("#save").click(saveFile);
   
   function saveFile(){

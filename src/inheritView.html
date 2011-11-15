@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>myZnode Inheritance View </title>
+<!--<link rel="stylesheet" type="text/css" href="css/viewstyles.css" />-->
+<script type="text/javascript" src="js/libs/jquery.min.js"></script>
+<script type="text/javascript" src="js/libs/jquery.color.js"></script>
+<script type="text/javascript" src="js/libs/raphael.js"></script>
+<style>
+ .btn{ 
+  padding: 17px 8px 13px 8px;
+  height : 10px;
+  margin: 0px 0px 0px 2px;
+  float : left;
+  cursor : pointer;
+  font-family: Georgia, serif;
+  font-size : 12px;
+  background-color : #efefef;
+}
+</style>
+<script>
+$(function(){
+	$(".btn").mouseenter(function(){
+		$(this).animate({"backgroundColor" : "white"}, 200);
+	  }).mouseleave(function(){
+		$(this).animate({"backgroundColor" : "#efefef"});
+	  });
+	  
+	$("#superclass").click(function(){
+		alert("superclass");
+	});
+	
+	$("#subclass1").click(function(){
+		alert("subclass");
+	});
+	
+	$("#subclass2").click(function(){
+		alert("subclass");
+	});
+});
+</script>
+<body>
+<div id="slider"></div>
+<div id="classList">This is an inherit view</div>
+<div id="superclass" class="btn">super</div>
+<div id="subclass1" class="btn">sub1</div>
+<div id="subclass2" class="btn">sub2</div>
+</body>
+</head>
+</html>

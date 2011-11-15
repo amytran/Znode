@@ -87,6 +87,44 @@ input{
   font-size : 12px;
   padding : 10px 0px 0px 18px;
 }
+
+/* a0t (new)*/
+#viewWin{
+  position : absolute;
+  top : 60px;
+  left : 1100px;
+  width : 250px;
+  height : 510px;
+  border : 20px;
+  background-color : #dcdcdc;
+  z-index : 6000;
+  display : none;
+}
+#classTitle{
+  font-family : Georgia, serif;
+  font-style : italic; 
+  margin-left : 10px;
+  margin-top : 10px;
+}
+
+#views{
+  position : relative;
+  margin : 10px;
+  
+  background-color : white;
+  width : 230px;
+  height : 450px;
+  overflow : auto;
+}
+/* a0t (new) */
+#classForm{
+  position : relative;
+  float : left;
+  font-family : Georgia, serif;
+  font-size : 12px;
+  padding : 10px 0px 0px 18px;
+}
+
 /* related to NodeGraph & li/ul */
 ul{
   padding : 0;

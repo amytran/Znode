@@ -9,12 +9,19 @@
     <script type="text/javascript" src="js/libs/raphael.js"></script>
     <script type="text/javascript" src="js/znode/nodegraph.js"></script>
     <script type="text/javascript" src="js/znode/ui.js"></script>
+	<script type="text/javascript" src="js/znode/nodedata.js"></script>
   </head>
   <body>
     <div id="openWin">
       <div id="fileTitle">Files:</div>
       <div id="files"></div>
     </div>
+
+	<div id="viewWin">
+	  <div id="classTitle">Classes:</div>
+	  <div id="views"></div>
+	</div>
+	
     <div id="overlay"></div>
     <div id="controls">
       <div id="logo" >Znode</div>
@@ -28,6 +35,17 @@
          <input type="text" name="filename" id="filename" spellcheck="false"/>
         </form>
       </div>
+	  <div id="inherit" class="btn">Inherit</div>
+	  <div id="compose" class="btn">Compose</div>
+	  <div id="gVariable" class="btn">Global Var</div>
+	  <div id="functionView" class="btn">Function View</div>
+	  <div id="resource" class="btn">Resource</div>
+	  <div id="classForm">
+		<form id="className">
+		 Class :
+		 <input type="text" name="classname" id="classname" spellcheck="false"/>
+		</form>
+	  </div>
     </div>
     <div id="canvas"></div>
   </body>

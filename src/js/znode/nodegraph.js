@@ -17,6 +17,8 @@ function NodeGraph(){
   var key = {};
   var SHIFT = 16;
   var topHeight = $("#controls").height();
+  var listClass = {};
+  var timerID = -1;
   
   var paper = new Raphael("canvas", "100", "100");
   
@@ -102,6 +104,10 @@ function NodeGraph(){
     currentNode.updateConnections();
     node.addConnection(currentConnection);
     
+	//handle the effect of the connected line between
+	//the two nodes when the mouse pointer is on the line
+	//and away from the line.
+	//when pointer click on the line, put up alert
     $(currentConnection.node).mouseenter(function(){
       this.raphael.attr("stroke","#FF0000");
     }).mouseleave(function(){
@@ -109,6 +115,8 @@ function NodeGraph(){
     }).click(function(){
       if (confirm("Are you sure you want to delete this connection?")){
         this.raphael.remove();
+		//connections uses raphael.id, so if this line is remove,
+		//its id will be removed as well
         delete connections[this.raphael.id];
       }
     });
@@ -208,6 +216,9 @@ function NodeGraph(){
             height : function(){ return c.height(); }};
   }
   
+  //research about overlay
+  //I believe it basically puts the
+  //node on top of the trans.gif image
   function showOverlay(){
     overlay.show();
     overlay.css({"width" : win.width(), "height" : win.height()}); //, "opacity": 0.1});
@@ -286,7 +297,21 @@ function NodeGraph(){
              "padding" : "0", "margin": "0",
              "font-size" : "9px", "cursor" : "pointer"});
              
-             
+    //a0t (new)
+	//canvas.append("<div class='inheritView'/>");
+/*	var viewWin = $("#viewWin");
+	viewWin.hide();
+	
+	var iView = $("#views");
+    bar.hover(function(){
+		bar.css("color", "blue");
+	}, function() {
+		bar.css("color", "gray");
+	}).click(function(){
+	    alert("testing");
+		//viewWin.fadeIn();
+	}
+*/
     if (!noDelete){
       n.append("<div class='ex'>X<\/div>");
       var ex = $(".node .ex").last();
@@ -398,36 +423,63 @@ function NodeGraph(){
     }
     this.updateConnections = updateConnections;
     
-    
+   //paper.path is from Rafael.js
+   //This command creats a path element by given path
+   //data string
+   //uppercase command is absolute
+   //lowercase command is relative
+   //M = moveto
+   //M 0 0 = command M with arguments (0,0)
+   //L = lineto
+   //L 1 1 = command L with arguments (1,1)
    function addLink(e){
       currentNode = curr;
       e.preventDefault();
       showOverlay();
+	  //draw a line by first move to 0,0
+	  //and ends the line at 1,1
       var link = paper.path("M 0 0 L 1 1");
+	  //stroke width in pixels, default is '1'
+	  //generate a line with 2 pixel width
       link.attr({"stroke-width":2});
       currentConnection = link;
       currentConnection.parent = $(this);
       
+	  //add the connection from this current node
+	  //to the new node
       curr.addConnection(link);
+	  //position of what? the link as the line
+	  //or the other node?
+	  //might have to put breakpoint and log to 
+	  //see what happen here
+	  //Maybe find out where the new node location?
       var loc = $(this).position();
       var nLoc = n.position();
       var x = loc.left + nLoc.left + 5;
       var y = loc.top + nLoc.top - topHeight + 5;
       newNode = true;
       
+	  //why use setInterval?
+	  //it is getting the node B x,y position
+	  //and connect the path end.
       var id = setInterval(function(){
         link.attr("path","M " + x + " " + y + " L " + mouseX + " " + mouseY);
         
         pathEnd.x = mouseX;
         pathEnd.y = mouseY;
       }, 30);
+	  
+	  //add the new id to the loops array?
       loops.push(id);
    }
+   
+   //not sure what this does yet.
    left.mousedown(addLink);
    right.mousedown(addLink);
    top.mousedown(addLink);
    bottom.mousedown(addLink);
    
+   //handle the "x" deletion of the node
    this.remove = function(){
      for (var i in curr.connections){
        var c = curr.connections[i];
@@ -460,19 +512,23 @@ function NodeGraph(){
       });
     });
     
+	//hanlde when the user drag the node on the bar
+	//to move it around
     bar.mousedown(function(e){
       currentNode = curr;
       n.css("z-index", zindex++);
       e.preventDefault();
       startDrag(n, {left : 10, top: 40, right : win.width() - n.width() - 10, bottom : win.height() - n.height() - 10},
+	  //update the connection so it flows with it
       updateConnections);
     });
     
+	//don't see any obvious effect
     n.mouseenter(function(){
       n.css("z-index", zindex++);
     });
     
-  }
+  }//end of function node
   
   function hitTest(a, b){
     var aPos = a.position();
@@ -520,7 +576,7 @@ function NodeGraph(){
   var defaultHeight = 50;
   
   this.addNodeAtMouse = function(){
-    //alert("Zevan");
+    alert("Zevan");
     var w = currentNode.width() || defaultWidth;
     var h = currentNode.height () || defaultHeight;
     var temp = new Node(mouseX, mouseY + 30, w, h);
@@ -530,7 +586,9 @@ function NodeGraph(){
   
   function defaultNode(){
     
-	/*a0t win.width = 250px, win.height = 510px
+	/*a0t 
+	 * win.width and win.height varies 
+	 * depending how big or small you have the browser window.
 	 * defaultWidth = 100
 	 * defaultHeight = 50
 	 * create new node with xp, yp, w, h, noDelete = true
@@ -550,16 +608,27 @@ function NodeGraph(){
   defaultNode(); //call to create the default node
 
   this.fromJSON = function(data){
+    //clear what is on the canvas prior to opening the 
+	//selected file
     clear();
+	//loop through all the data nodes of this saved json file
+	//and build the graph out of the data
     for (var i in data.nodes){
       var n = data.nodes[i];
+	  //ex is the indicator for noDelete
       var ex = (i == "0") ? true : false;
       var temp = new Node(n.x, n.y, n.width, n.height, ex, n.id);
+	  //replace the node text string \n with '\n'
       var addreturns = n.txt.replace(/\\n/g,'\n');
       temp.txt.val(addreturns);
+	  console.log("text val: " + temp.txt.val());
+	  listClass[i] = temp.txt.val();
     }
+	//builds the connectors of the nodes
     for (i in data.connections){
       var c = data.connections[i];
+	  //get the data of the connector from node A to B
+	  //and which area to connect to left, right, top, bottom (conA/conB)
       createConnection(nodes[c.nodeA], c.conA, nodes[c.nodeB], c.conB);
     }
   }
@@ -603,5 +672,38 @@ function NodeGraph(){
     str = str.replace(/\0/g,'\\0');
     str = str.replace(/\n/g,'\\\\n');
     return str;
+  }
+  
+  this.getClassList = function()
+  {
+	console.log("list: " + listClass[0]);
+	return listClass;
+  }
+  
+  this.setTimer = function(t)
+  {
+	timerID = t;
+  }
+  
+  function getTimer()
+  {
+	return timerID;
+  }
+  
+  this.displayInheritance = function(newWin, cData)
+  {
+	console.log("in displayInheritance func" + newWin);
+	
+	//display the list
+	var superc = newWin.document.getElementById("superclass");
+	var subc1 = newWin.document.getElementById("subclass1");
+	var subc2 = newWin.document.getElementById("subclass2");
+	
+	console.log("ready " + cData[0] + " " + getTimer());
+	//display the string to the new window
+	superc.innerHTML = String(cData[0]);
+	subc1.innerHTML = String(cData[1]);
+	subc2.innerHTML = String(cData[2]);
+	self.clearInterval(getTimer());	
   }
 }

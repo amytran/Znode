@@ -17,17 +17,21 @@ function NodeGraph(){
   var key = {};
   var SHIFT = 16;
   var topHeight = $("#controls").height();
-  var listClass = {};
-  var timerID = -1;
+  var newPaperWidth;
+  var newPaperHeight;
+
   
   var paper = new Raphael("canvas", "100", "100");
   
-  function resizePaper(){
-    paper.setSize(win.width(), win.height() - topHeight);
+  function resizePaper(w, h){
+    //paper.setSize(win.width(), win.height() - topHeight);
+    paper.setSize(w, h);
+    console.log("resize paper width: " + w + " height: " + h);
   }
-  win.resize(resizePaper);
-  resizePaper();
-  
+  win.resize(resizePaper(win.width(), win.height() - topHeight));
+  console.log("win resize");
+  resizePaper(win.width(), win.height() - topHeight);
+ 
   canvas.append("<ul id='menu'><li>Left<\/li><li>Right<\/li><li>Top<\/li><li>Bottom<\/li><\/ul>");
   var menu = $("#menu");
   menu.css({"position" : "absolute", "left" : 100, "top" : 0, "z-index" : 5000, "border" : "1px solid gray", "padding" : 0});
@@ -48,14 +52,79 @@ function NodeGraph(){
     var dir = $(this).text();
     connectNode(dir);
   });
-  
+
+  /************************************
+   *    Scroll parts                  *
+   ************************************/
+    //scrollpane parts
+    var scrollPane = $( ".scroll-pane" ),
+        scrollContent = $( ".scroll-content" );
+    
+    //In order to get the control not being pushed up by the lower scrollbar,
+    //make the scroll-pane height smaller
+    var spWidth = $(".scroll-pane").css("width", $(window).width()),
+        spHeight = $(".scroll-pane").css("height", $(window).height() - ($("#controls").height() * 2));
+    
+/*  console.log("spWidth: " + spWidth.width());
+    console.log("spHeight: " + spHeight.height());
+*/
+    var scWidth = $(".scroll-content").css("width", $("#canvas").width()),
+        scHeight = $(".scroll-content").css("height", $("#canvas").height());
+    
+    //var scWidth = $(".scroll-content").css("width", graph.getCurrentNode().width()),
+    //  scHeight = $(".scroll-content").css("height", graph.getCurrentNode().height());
+    
+/*  console.log("scWidth: " + scWidth.width());
+    console.log("scHeight: " + scHeight.height());
+*/      
+    //$(".scroll-pane").prepend("<div class='scroll-bar-vertical'/>");
+    //if I do a prepend of the canvas, the background theme also will be removed
+    //$(".scroll-pane").prepend("<div class='scroll-bar-vertical'/>");
+    var vBarHeight = $(".scroll-bar-vertical").height( 
+            ($('.scroll-pane').height() - $("#controls").height()));
+    
+    var vscrollbar = $(".scroll-bar-vertical").slider({
+        orientation: 'vertical',
+        value: 100,
+        slide: function(event, ui) {
+/*      console.log("scrollC height: " + scrollContent.height());
+        console.log("scrollP height " + scrollPane.height());
+        console.log("bar value " + ui.value);
+*/
+        if ( scrollContent.height() > scrollPane.height() ) {
+            scrollContent.css( "margin-top", Math.round(
+                (100 - ui.value)/ 100 * ( scrollPane.height() - scrollContent.height() )
+            ) + "px" );
+            } else {
+            scrollContent.css( "margin-top", 0 );
+            }
+        }
+    });
+
+    //$(".scroll-pane").append("<div class='scroll-bar'/>");
+    $(".scroll-bar").width($('.scroll-pane').width());
+    
+    var scrollbar = $( ".scroll-bar" ).slider({
+        slide: function( event, ui ) {
+/*      console.log("scrollC width: " + scrollContent.width());
+        console.log("scrollP width: " + scrollPane.width());
+*/
+        if ( scrollContent.width() > scrollPane.width() ) {
+                scrollContent.css( "margin-left", Math.round( 
+                    ui.value / 100 * ( scrollPane.width() - scrollContent.width() )
+                ) + "px" );
+            } else {
+                scrollContent.css( "margin-left", 0 );
+            }
+        }
+    });
+
+//**********************************************************
+    
   function connectNode(dir){
     var node, x, y;
     dir = dir.toLowerCase();
-    
-    
-    
-      
+        
     if (dir == "left"){
       x = pathEnd.x + 5;
       y = pathEnd.y + topHeight - currentNode.height() / 2;
@@ -104,10 +173,10 @@ function NodeGraph(){
     currentNode.updateConnections();
     node.addConnection(currentConnection);
     
-	//handle the effect of the connected line between
-	//the two nodes when the mouse pointer is on the line
-	//and away from the line.
-	//when pointer click on the line, put up alert
+    //handle the effect of the connected line between
+    //the two nodes when the mouse pointer is on the line
+    //and away from the line.
+    //when pointer click on the line, put up alert
     $(currentConnection.node).mouseenter(function(){
       this.raphael.attr("stroke","#FF0000");
     }).mouseleave(function(){
@@ -115,8 +184,8 @@ function NodeGraph(){
     }).click(function(){
       if (confirm("Are you sure you want to delete this connection?")){
         this.raphael.remove();
-		//connections uses raphael.id, so if this line is remove,
-		//its id will be removed as well
+        //connections uses raphael.id, so if this line is remove,
+        //its id will be removed as well
         delete connections[this.raphael.id];
       }
     });
@@ -138,8 +207,30 @@ function NodeGraph(){
   });
   
   $(document).mousemove(function(e){
+    //initialize paper width and height
+    //to the current size.
+    //If the node is created beyond this area,
+    //set paper's new size
+    newPaperWidth = win.width(), 
+        newPaperHeight = win.height();
+
     mouseX = e.pageX;
     mouseY = e.pageY - topHeight;
+    if (mouseX > win.width())
+    {
+        newPaperWidth = mouseX;
+    }
+    if (mouseY > win.height())
+    {
+        newPaperHeight = mouseY;
+    }
+    
+    if (newPaperWidth != win.width() 
+    || newPaperHeight != win.height())
+    {
+        resizePaper(newPaperWidth, newPaperHeight);
+    }
+
   }).mouseup(function(e){
     overlay.hide();
     var creatingNewNode = newNode;
@@ -297,21 +388,6 @@ function NodeGraph(){
              "padding" : "0", "margin": "0",
              "font-size" : "9px", "cursor" : "pointer"});
              
-    //a0t (new)
-	//canvas.append("<div class='inheritView'/>");
-/*	var viewWin = $("#viewWin");
-	viewWin.hide();
-	
-	var iView = $("#views");
-    bar.hover(function(){
-		bar.css("color", "blue");
-	}, function() {
-		bar.css("color", "gray");
-	}).click(function(){
-	    alert("testing");
-		//viewWin.fadeIn();
-	}
-*/
     if (!noDelete){
       n.append("<div class='ex'>X<\/div>");
       var ex = $(".node .ex").last();
@@ -342,7 +418,7 @@ function NodeGraph(){
              "border" : "none","z-index":4});
           
     this.txt = txt;
-    
+        
     n.append("<div class='resizer' />");
     var resizer = $(".node .resizer").last();
     
@@ -436,40 +512,40 @@ function NodeGraph(){
       currentNode = curr;
       e.preventDefault();
       showOverlay();
-	  //draw a line by first move to 0,0
-	  //and ends the line at 1,1
+    //draw a line by first move to 0,0
+    //and ends the line at 1,1
       var link = paper.path("M 0 0 L 1 1");
-	  //stroke width in pixels, default is '1'
-	  //generate a line with 2 pixel width
+    //stroke width in pixels, default is '1'
+    //generate a line with 2 pixel width
       link.attr({"stroke-width":2});
       currentConnection = link;
       currentConnection.parent = $(this);
       
-	  //add the connection from this current node
-	  //to the new node
+    //add the connection from this current node
+    //to the new node
       curr.addConnection(link);
-	  //position of what? the link as the line
-	  //or the other node?
-	  //might have to put breakpoint and log to 
-	  //see what happen here
-	  //Maybe find out where the new node location?
+    //position of what? the link as the line
+    //or the other node?
+    //might have to put breakpoint and log to 
+    //see what happen here
+    //Maybe find out where the new node location?
       var loc = $(this).position();
       var nLoc = n.position();
       var x = loc.left + nLoc.left + 5;
       var y = loc.top + nLoc.top - topHeight + 5;
       newNode = true;
       
-	  //why use setInterval?
-	  //it is getting the node B x,y position
-	  //and connect the path end.
+    //why use setInterval?
+    //it is getting the node B x,y position
+    //and connect the path end.
       var id = setInterval(function(){
         link.attr("path","M " + x + " " + y + " L " + mouseX + " " + mouseY);
         
         pathEnd.x = mouseX;
         pathEnd.y = mouseY;
       }, 30);
-	  
-	  //add the new id to the loops array?
+    
+    //add the new id to the loops array
       loops.push(id);
    }
    
@@ -503,7 +579,7 @@ function NodeGraph(){
                "height" : y + resizer.height() + 1});
         
         txt.css({"width" : n.width() - 5, "height" : n.height() - bar.height() - 5});
-        
+              
         positionLeft();
         positionRight();
         positionTop();
@@ -512,18 +588,18 @@ function NodeGraph(){
       });
     });
     
-	//hanlde when the user drag the node on the bar
-	//to move it around
+    //hanlde when the user drag the node on the bar
+    //to move it around
     bar.mousedown(function(e){
       currentNode = curr;
       n.css("z-index", zindex++);
       e.preventDefault();
       startDrag(n, {left : 10, top: 40, right : win.width() - n.width() - 10, bottom : win.height() - n.height() - 10},
-	  //update the connection so it flows with it
+    //update the connection so it flows with it
       updateConnections);
     });
     
-	//don't see any obvious effect
+    //don't see any obvious effect
     n.mouseenter(function(){
       n.css("z-index", zindex++);
     });
@@ -578,7 +654,7 @@ function NodeGraph(){
   this.addNodeAtMouse = function(){
     alert("Zevan");
     var w = currentNode.width() || defaultWidth;
-    var h = currentNode.height () || defaultHeight;
+    var h = currentNode.height() || defaultHeight;
     var temp = new Node(mouseX, mouseY + 30, w, h);
     currentNode = temp;
     currentConnection = null;
@@ -586,19 +662,14 @@ function NodeGraph(){
   
   function defaultNode(){
     
-	/*a0t 
-	 * win.width and win.height varies 
-	 * depending how big or small you have the browser window.
-	 * defaultWidth = 100
-	 * defaultHeight = 50
-	 * create new node with xp, yp, w, h, noDelete = true
-	 */
-	 
-	console.log("win.width: \n" + win.width());
-	console.log("win.height: \n" + win.height());
-	console.log("width: \n" + defaultWidth);
-	console.log("height: \n" + defaultHeight);
-	
+    /*
+    * win.width and win.height varies 
+    * depending how big or small you have the browser window.
+    * defaultWidth = 100
+    * defaultHeight = 50
+    * create new node with xp, yp, w, h, noDelete = true, 
+    */
+        
     var temp = new Node(win.width() / 2 - defaultWidth / 2, 
                         win.height() / 2 - defaultHeight / 2,
                         defaultWidth, defaultHeight, true);
@@ -609,26 +680,24 @@ function NodeGraph(){
 
   this.fromJSON = function(data){
     //clear what is on the canvas prior to opening the 
-	//selected file
+    //selected file
     clear();
-	//loop through all the data nodes of this saved json file
-	//and build the graph out of the data
+    //loop through all the data nodes of this saved json file
+    //and build the graph out of the data
     for (var i in data.nodes){
       var n = data.nodes[i];
-	  //ex is the indicator for noDelete
+    //ex is the indicator for noDelete
       var ex = (i == "0") ? true : false;
       var temp = new Node(n.x, n.y, n.width, n.height, ex, n.id);
-	  //replace the node text string \n with '\n'
+    //replace the node text string \n with '\n'
       var addreturns = n.txt.replace(/\\n/g,'\n');
       temp.txt.val(addreturns);
-	  console.log("text val: " + temp.txt.val());
-	  listClass[i] = temp.txt.val();
     }
-	//builds the connectors of the nodes
+    //builds the connectors of the nodes
     for (i in data.connections){
       var c = data.connections[i];
-	  //get the data of the connector from node A to B
-	  //and which area to connect to left, right, top, bottom (conA/conB)
+    //get the data of the connector from node A to B
+    //and which area to connect to left, right, top, bottom (conA/conB)
       createConnection(nodes[c.nodeA], c.conA, nodes[c.nodeB], c.conB);
     }
   }
@@ -673,37 +742,21 @@ function NodeGraph(){
     str = str.replace(/\n/g,'\\\\n');
     return str;
   }
-  
-  this.getClassList = function()
+    
+  this.getCurrentNode = function()
   {
-	console.log("list: " + listClass[0]);
-	return listClass;
+    return currentNode;
   }
   
-  this.setTimer = function(t)
+  this.getCurrNodeHeight = function()
   {
-	timerID = t;
+    return currentNode.height();
   }
   
-  function getTimer()
+  this.getCurrNodeWidth = function()
   {
-	return timerID;
+    return currentNode.Width();
   }
+
   
-  this.displayInheritance = function(newWin, cData)
-  {
-	console.log("in displayInheritance func" + newWin);
-	
-	//display the list
-	var superc = newWin.document.getElementById("superclass");
-	var subc1 = newWin.document.getElementById("subclass1");
-	var subc2 = newWin.document.getElementById("subclass2");
-	
-	console.log("ready " + cData[0] + " " + getTimer());
-	//display the string to the new window
-	superc.innerHTML = String(cData[0]);
-	subc1.innerHTML = String(cData[1]);
-	subc2.innerHTML = String(cData[2]);
-	self.clearInterval(getTimer());	
-  }
 }

@@ -3,25 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <title>Znode</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css" /> 
+    <link rel="stylesheet" href="css/base/jquery.ui.all.css" type="text/css" /> 
     <script type="text/javascript" src="js/libs/jquery.min.js"></script>
     <script type="text/javascript" src="js/libs/jquery.color.js"></script>
     <script type="text/javascript" src="js/libs/raphael.js"></script>
+	<script type="text/javascript" src="js/libs/jquery-ui-1.8.16.custom.js"></script>
     <script type="text/javascript" src="js/znode/nodegraph.js"></script>
     <script type="text/javascript" src="js/znode/ui.js"></script>
-	<script type="text/javascript" src="js/znode/nodedata.js"></script>
   </head>
   <body>
     <div id="openWin">
       <div id="fileTitle">Files:</div>
       <div id="files"></div>
-    </div>
-
-	<div id="viewWin">
-	  <div id="classTitle">Classes:</div>
-	  <div id="views"></div>
-	</div>
-	
+    </div>	
     <div id="overlay"></div>
     <div id="controls">
       <div id="logo" >Znode</div>
@@ -36,18 +30,36 @@
         </form>
       </div>
 	  <div id="inherit" class="btn">Inherit</div>
-	  <div id="compose" class="btn">Compose</div>
+	  <div id="composeView" class="btn">Compose</div>
 	  <div id="gVariable" class="btn">Global Var</div>
-	  <div id="functionView" class="btn">Function View</div>
-	  <div id="resource" class="btn">Resource</div>
+	  <div id="functionView" class="btn">Function </div>
+<!--	  <div id="resource" class="btn">Resource</div> -->
 	  <div id="classForm">
 		<form id="className">
 		 Class :
-		 <input type="text" name="classname" id="classname" spellcheck="false"/>
+		 <input type="text" name="classname" id="classname" size="15" spellcheck="false"/>
+		</form>
+	  </div>
+	  <div id="functForm">
+		<form id="functName">
+		 Funct :
+		 <input type="text" name="fname" id="functionname" size="15" spellcheck="false"/>
 		</form>
 	  </div>
     </div>
-    <div id="canvas"></div>
+    <div class="main">
+    <!-- aside is needed to put the vertical slider and not
+         interfere with the canvas division -->
+    <aside>
+        <div class="scroll-bar-vertical"></div>
+    </aside>
+	<div class="scroll-pane ui-widget ui-widget-header ui-corner-all">
+		<div class="scroll-content">
+			<div id="canvas"></div>
+		</div> <!-- scroll-content -->
+	</div> <!-- scroll-pane -->
+    </div> <!-- end of main -->
+    <div class="scroll-bar ui-widget-content ui-corner-bottom"></div>
   </body>
 </html>
   

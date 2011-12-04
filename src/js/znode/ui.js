@@ -2,10 +2,7 @@ $(function(){
   
   //instantiate a NodeGraph object
   var graph = new NodeGraph();
-  
-  //instantiate a NodeData object
-  //var nodeData = new NodeData();
-  
+    
   //This is where it creates a node
   //on the canvas when a mouse is click on the canvas
   
@@ -20,18 +17,9 @@ $(function(){
          }
        }
      }
-
-    if (viewWin.css("display") == "none"){
-       var children = $(e.target).children();
-       if (children.length > 0){
-         var type = children[0].tagName;
-         if (type == "desc" || type == "SPAN"){
-           graph.addNodeAtMouse();
-         }
-       }
-     }
-
   });
+  
+  var classWin = $("#classWin");
   
   // ui code
   var openWin = $("#openWin");
@@ -64,6 +52,7 @@ $(function(){
     }
   });
 
+/*  
   //textarea for the function name
   var fnameMessage = "Enter funct name";
   var functionname = $("#functionname").val(fnameMessage);
@@ -77,6 +66,7 @@ $(function(){
       $(this).val(fnameMessage);
     }
   });
+*/
 
   //$(selector).mouseenter() is jquery event
   //this event occurs when the mouse pointer is over an element
@@ -93,13 +83,14 @@ $(function(){
     clearNames();
     graph.clearAll();
     openWin.fadeOut();
+    classWin.fadeOut();
   });
   
   function clearNames()
   {
     filename.val(nameMessage);
     classname.val(cnameMessage);
-    functionname.val(fnameMessage);
+//    functionname.val(fnameMessage);
   }
   
   $("#help").click(function(){
@@ -117,12 +108,12 @@ $(function(){
   function saveFile(){
     var name = filename.val();
     var cname = classname.val();
-    var fname = functionname.val();
+//    var fname = functionname.val();
     clearNames();
     
     if ((name == "" || name == nameMessage) &&
-        (cname == "" || cname == cnameMessage) &&
-        (fname == "" || fname == fnameMessage))
+        (cname == "" || cname == cnameMessage))
+//        && (fname == "" || fname == fnameMessage))
     {   
         alert("Please Name Your File, Class or Function");
         return;
@@ -136,6 +127,7 @@ $(function(){
         return;
     }
 
+/*    
     if ((cname != "" && cname != cnameMessage) && (fname != "" && fname != fnameMessage))
     {
         var cfname = cname + "_" + fname;
@@ -144,7 +136,7 @@ $(function(){
         });
         return;
     }
-
+*/
     if (cname != "" && cname != cnameMessage)
     {
         $.post("json/save.php", {data:graph.toJSON(), name:cname}, function(data){
@@ -160,6 +152,7 @@ $(function(){
   //the open window fades out
   $("#canvas").mousedown(function(){
     openWin.fadeOut();
+    classWin.fadeOut();
   });
   
   //open menu is click, list all the 
@@ -183,16 +176,27 @@ $(function(){
     saveFile();
   });
 
+  //open menu is click, list all the 
+  //saved .json files
+  $("#sourceView").click(function(){
+    var fileList =  $("#classes");
+    fileList.html("<div>loading...<\/div>");
+    classWin.fadeIn();
+    fileList.load("json/classes.php?"+Math.random()*1000000);
+  });
+
   //handle the inherit button click 
   $("#inherit").click(function(){
     //get the saved file project that you wish
     //to see the inheritance view
-    var name = filename.val();
+    /*var name = filename.val();
     if (name == "" || name == nameMessage){
       alert("Please enter project name for inheritance view");
       return;
-    }
-
+    }*/
+    
+    var name = prompt("Message", "Enter Class Name For The Inheritance View");
+    
     //get the JSON file with this filename if any
     //0 will be replaced with an enum to indicate 
     //what kind of file is being retrieved.
@@ -222,6 +226,20 @@ $(function(){
   }); //end of global variable view
   
   $("#functionView").click(function(){
+    //prompt the user to enter the global variable
+    //input value will be saved to inputVar
+    var cInput = prompt("Message", "Enter Class Name"); 
+    var fInput = prompt("Message", "Enter Function Name");
+
+    var URL = "/myZnode/src/source/" + cInput + ".js";
+    var childWin = window.open(URL, cInput);
+    //set a timer to wait until the chile window is loaded
+    //before processing the highlight.
+    var loadTimer = self.setInterval(function() {graph.highlightText(childWin, fInput);}, 3000);
+    graph.setLoadTimer(loadTimer);
+    
+    
+/*
     var cname = classname.val();
     var fname = functionname.val();
     
@@ -239,26 +257,43 @@ $(function(){
     
     //get the JSON file with this filename if any    
     retrieveJSON(joinName, 3);
-
+*/
   }); //end of function view
   
-  //Process the click action when a saved file
-  //in the open window.
-  $(".file").live('click', function() {
-    var name = $(this).text();
-    //$(selector).getJSON(url,data,success(data,status,xhr))
-    //only url is required.
-    //what is the second parameter trying to do with the random?
-    //Data will be retrieved from current directory/files/
+    //Process the click action when a saved file
+    //in the open window.
+    $(".file").live('click', function() {
+        var name = $(this).text();
+        //$(selector).getJSON(url,data,success(data,status,xhr))
+        //only url is required.
+        //what is the second parameter trying to do with the random?
+        //Data will be retrieved from current directory/files/
 
-    //get the JSON file with this filename if any
-    retrieveJSON(name, 0);
-  }).live('mouseover', function(){
-    $(this).css({"background-color": "#ededed"});
-  }).live("mouseout", function(){
-    $(this).css({"background-color": "white"});
-  }); //end of file live
-  
+        //get the JSON file with this filename if any
+        retrieveJSON(name, 0);
+    }).live('mouseover', function(){
+       $(this).css({"background-color": "#ededed"});
+    }).live("mouseout", function(){
+       $(this).css({"background-color": "white"});
+    }); //end of file live
+      
+    //Process the click action when a source file
+    //in the source class window.
+    $(".classFile").live('click', function() {
+        var name = $(this).text();
+        var URL = "/myZnode/src/source/" + name + ".js";
+        var childWin = window.open(URL, name);
+        //set a timer to wait until the chile window is loaded
+        //before processing the highlight.
+        var loadTimer = self.setInterval(function() {graph.highlightText(childWin, "GameObject");}, 3000);
+        graph.setLoadTimer(loadTimer);
+            
+    }).live('mouseover', function(){
+      $(this).css({"background-color": "#ededed"});
+    }).live("mouseout", function(){
+      $(this).css({"background-color": "white"});
+    }); //end of file live  
+
     function retrieveJSON(name, viewType)
     {
         $.getJSON("files/" + name + ".json", {n:Math.random()}, function(data){
@@ -271,4 +306,5 @@ $(function(){
         }
         });
     }  
+    
 });

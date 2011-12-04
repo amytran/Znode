@@ -19,6 +19,7 @@ function NodeGraph(){
   var topHeight = $("#controls").height();
   var newPaperWidth;
   var newPaperHeight;
+  var timerID = -1;
 
   
   var paper = new Raphael("canvas", "100", "100");
@@ -381,6 +382,7 @@ function NodeGraph(){
     var nodeWidth = n.width();
     var nodeHeight = n.height();
            
+    //Create the top bar of the node
     n.append("<div class='bar'/>");
     var bar = $(".node .bar").last();
     bar.css({"height" : "10px", 
@@ -389,6 +391,8 @@ function NodeGraph(){
              "font-size" : "9px", "cursor" : "pointer"});
              
     if (!noDelete){
+      //Create the cross sign on the node
+      //for closing the node
       n.append("<div class='ex'>X<\/div>");
       var ex = $(".node .ex").last();
       ex.css({"position":"absolute","padding-right" : 2, "padding-top" : 1, "padding-left" : 2,
@@ -406,19 +410,75 @@ function NodeGraph(){
         }
       });
     }
-   
+    
+    //Create the textarea for the node name
+    n.append("<textarea class='name' spellcheck='false' />");
+    var nName = $(".node .name").last();
+    nName.css("position", "absolute");
+    
+    nName.css({"width" : nodeWidth - 5,
+             "height" : "20px",
+             "resize" : "none", "overflow" : "hidden",
+             "left": 0, "top" : bar.height(),
+             "font-size" : "12px" , "font-family" : "sans-serif",
+             "border" : "1px solid gray","z-index":10});
+    
+    this.name = nName;
+    
+    //Create the textarea for the source code of this node class
+    //if user wished to copy and paste in the code or write anything
+    //wished.
     n.append("<textarea class='txt' spellcheck='false' />");
     var txt = $(".node .txt").last();
     txt.css("position","absolute");
    
     txt.css({"width" : nodeWidth - 5,
-             "height" : nodeHeight - bar.height() - 5,
+             "height" : nodeHeight - bar.height() - nName.height() - 10,
+             "left": 0, "top" : bar.height() + nName.height() + 5,
              "resize" : "none", "overflow" : "hidden",
              "font-size" : "12px" , "font-family" : "sans-serif",
              "border" : "none","z-index":4});
           
     this.txt = txt;
-        
+
+    //Create the text src at the bottom of the node.
+    //Once src is click, the source code of this node class
+    //is opened in a different window if only if there is
+    //source code exists in the source directory
+    n.append("<div class='src'>SRC<\/div>");
+    var srcPtr = $(".node .src").last();
+    srcPtr.css({"position":"absolute", "z-index" : 10,
+                "width" : nodeWidth/4, "height" : "10px",
+                "left" : 0, "top" : nodeHeight - 11,
+                "background-color" : "gray", "font-size" : "10px",
+                "border" : "1px solid gray","font-family" : "sans-serif",
+                "cursor" : "pointer"});
+    srcPtr.hover(function(){
+        srcPtr.css("color","black");
+    }, function(){
+        srcPtr.css("color","white");
+    }).click(function(){
+        //If the node name is entered, look into 
+        //the URL for javascript with that name
+        //and open window to show the source code.
+        //Otherwise, alert user to enter the node name
+        if (nName.val() != "")
+        {
+            cInput = nName.val();
+            var URL = "/myZnode/src/source/" + cInput + ".js";
+            var newWin = window.open(URL, cInput);
+            //set a timer to wait until the chile window is loaded
+            //before processing the highlight.
+            var loadTimer = self.setInterval(function() {setHighlightTerms(newWin, "GameObject");}, 3000);
+            setTimer(loadTimer);
+        }
+        else
+        {
+            alert("Enter Node Class Name");
+        }
+    });
+
+    //Create the resizer box on the bottom right of the node
     n.append("<div class='resizer' />");
     var resizer = $(".node .resizer").last();
     
@@ -578,8 +638,13 @@ function NodeGraph(){
         n.css({"width" : x + resizer.width() + 1,
                "height" : y + resizer.height() + 1});
         
-        txt.css({"width" : n.width() - 5, "height" : n.height() - bar.height() - 5});
-              
+        nName.css({"width" : n.width() - 5, "height" : "20px"});
+        
+        txt.css({"width" : n.width() - 5, "height" : n.height() - bar.height() - nName.height() - 10});
+
+        srcPtr.css({"width" : (x + resizer.width() + 1)/ 4, "height" : "10px",
+                    "left" : 0, "top" : y - 1});
+        
         positionLeft();
         positionRight();
         positionTop();
@@ -633,13 +698,13 @@ function NodeGraph(){
     nodeId = 0;
     connectionsId = 0;
     for (var i in nodes){
-      nodes[i].remove();
+        nodes[i].remove();
     }
   }
   
   this.clearAll = function(){
     clear();
-    defaultNode();
+    //defaultNode();
     currentConnection = null;
     currenNode = null;
   }
@@ -649,13 +714,15 @@ function NodeGraph(){
   }
   
   var defaultWidth = 100;
-  var defaultHeight = 50;
+  var defaultHeight = 80;
   
   this.addNodeAtMouse = function(){
     alert("Zevan");
-    var w = currentNode.width() || defaultWidth;
-    var h = currentNode.height() || defaultHeight;
-    var temp = new Node(mouseX, mouseY + 30, w, h);
+    //var w = currentNode.width() || defaultWidth;
+    //var h = currentNode.height() || defaultHeight;
+    //var temp = new Node(mouseX, mouseY + 30, w, h);
+    var temp = new Node(mouseX, mouseY + 30, defaultWidth, defaultHeight);
+    temp.name[0].focus();  //focus the cursor in the node for node name input
     currentNode = temp;
     currentConnection = null;
   }
@@ -676,7 +743,7 @@ function NodeGraph(){
     temp.txt[0].focus();  //focus the cursor in the node for text input
     currentNode = temp;
   }
-  defaultNode(); //call to create the default node
+  //defaultNode(); //call to create the default node
 
   this.fromJSON = function(data){
     //clear what is on the canvas prior to opening the 
@@ -685,13 +752,16 @@ function NodeGraph(){
     //loop through all the data nodes of this saved json file
     //and build the graph out of the data
     for (var i in data.nodes){
-      var n = data.nodes[i];
-    //ex is the indicator for noDelete
-      var ex = (i == "0") ? true : false;
-      var temp = new Node(n.x, n.y, n.width, n.height, ex, n.id);
-    //replace the node text string \n with '\n'
-      var addreturns = n.txt.replace(/\\n/g,'\n');
-      temp.txt.val(addreturns);
+        var n = data.nodes[i];
+        //ex is the indicator for noDelete
+        var ex = (i == "0") ? true : false;
+        var temp = new Node(n.x, n.y, n.width, n.height, ex, n.id);
+        //replace the node text string \n with '\n'
+        var addNreturns = n.name.replace(/\\n/g,'\n');
+        temp.name.val(addNreturns);   
+        //replace the node text string \n with '\n'
+        var addreturns = n.txt.replace(/\\n/g,'\n');
+        temp.txt.val(addreturns);
     }
     //builds the connectors of the nodes
     for (i in data.connections){
@@ -711,6 +781,7 @@ function NodeGraph(){
       json += '"y" : ' + n.y() + ', ';
       json += '"width" : ' + n.width() + ', ';
       json += '"height" : ' + n.height() + ', ';
+      json += '"name" : "' + addSlashes(n.name.val()) + '", ';
       json += '"txt" : "' + addSlashes(n.txt.val()) + '"},';
     }
     json = json.substr(0, json.length - 1);
@@ -735,14 +806,94 @@ function NodeGraph(){
   }
   
   function addSlashes(str) {
+    str = str.replace(/\"/g,'\\"');
     str = str.replace(/\\/g,'\\\\');
     str = str.replace(/\'/g,'\\\'');
-    str = str.replace(/\"/g,'\\"');
     str = str.replace(/\0/g,'\\0');
     str = str.replace(/\n/g,'\\\\n');
     return str;
   }
+  
+  
+  this.highlightText = function(searchWin, searchText)
+  {
+    setHighlightTerms(searchWin, searchText);
+  }
+  
+  function setHighlightTerms(searchWin, searchText)
+  {    
+    //set the Highlight tags
+    highlightStartTag = "<font style='color:blue; background-color:yellow;'>";
+    highlightEndTag = "</font>";
     
+    //The text array to be search
+    searchArray = searchText.split(" ");
+    
+    if(!searchWin.document.body || typeof(searchWin.document.body.innerHTML) == "undefined")
+    {
+        alert("Sorry, search page is unavailable. Search failed.");
+        return;
+    }
+    
+    var bodyText = searchWin.document.body.innerHTML;
+    for (var i = 0; i < searchArray.length; i++)
+    {
+        bodyText = doHighlight(bodyText, searchArray[i], highlightStartTag, highlightEndTag);
+    }
+    
+    searchWin.document.body.innerHTML = bodyText;
+    console.log("bodyText is: " + searchWin.document.body.innerHTML);
+    alert("Highlight completed");
+    self.clearInterval(getTimer()); 
+    
+  }
+  
+  function doHighlight(bodyText, searchTerm, highlightStartTag, highlightEndTag)
+  {
+    var newText = "";
+    var i = -1;
+    var lcSearchTerm = searchTerm.toLowerCase();
+    var lcBodyText = bodyText.toLowerCase();
+
+    console.log("got in doHighlight: " + lcSearchTerm);
+    console.log("got in doHighlight: " + bodyText);
+    
+    while(bodyText.length > 0)
+    {
+        i = lcBodyText.indexOf(lcSearchTerm, i+1);
+        console.log("bodyText length: " + bodyText.length + " i is: " + i);
+        if(i < 0)
+        {
+            newText += bodyText;
+            bodyText = "";
+        }
+        else 
+        {
+            newText += bodyText.substring(0,i) + highlightStartTag + bodyText.substr(i, searchTerm.length) + highlightEndTag;
+            console.log("newText is: " + newText);
+            bodyText = bodyText.substr(i + searchTerm.length);
+            lcBodyText = bodyText.toLowerCase();
+            i = -1;
+        }
+    }
+    return newText;
+  }
+  
+  this.setLoadTimer = function(t)
+  {
+    setTimer(t);
+  }
+  
+  function setTimer(t)
+  {
+    timerID = t;
+  }
+  
+  function getTimer()
+  {
+    return timerID;
+  }
+
   this.getCurrentNode = function()
   {
     return currentNode;

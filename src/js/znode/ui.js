@@ -20,6 +20,8 @@ $(function(){
   });
   
   var classWin = $("#classWin");
+  var gVarWin = $("#gVarWin");
+  var composeWin = $("#composeWin");
   
   // ui code
   var openWin = $("#openWin");
@@ -52,22 +54,6 @@ $(function(){
     }
   });
 
-/*  
-  //textarea for the function name
-  var fnameMessage = "Enter funct name";
-  var functionname = $("#functionname").val(fnameMessage);
-
-  functionname.focus(function(){
-    if ($(this).val() == fnameMessage){
-      $(this).val("");
-    }
-  }).blur(function(){
-    if ($(this).val() == ""){
-      $(this).val(fnameMessage);
-    }
-  });
-*/
-
   //$(selector).mouseenter() is jquery event
   //this event occurs when the mouse pointer is over an element
   //jquery effect custom animations syntax
@@ -84,13 +70,14 @@ $(function(){
     graph.clearAll();
     openWin.fadeOut();
     classWin.fadeOut();
+    gVarWin.fadeOut();
+    composeWin.fadeOut();
   });
   
   function clearNames()
   {
     filename.val(nameMessage);
     classname.val(cnameMessage);
-//    functionname.val(fnameMessage);
   }
   
   $("#help").click(function(){
@@ -102,57 +89,37 @@ $(function(){
     window.open("http://www.zreference.com/znode", "_blank");
   });
   
-  //when save option is click, call saveFile function
+  //when new option is clicked, create the default node
+  $("#new").click(function(){graph.createDefaultNode()});
+  
+  //when save option is clicked, call saveFile function
   $("#save").click(saveFile);
   
   function saveFile(){
     var name = filename.val();
-    var cname = classname.val();
-//    var fname = functionname.val();
     clearNames();
     
-    if ((name == "" || name == nameMessage) &&
-        (cname == "" || cname == cnameMessage))
-//        && (fname == "" || fname == fnameMessage))
+    if (name == "" || name == nameMessage)
     {   
-        alert("Please Name Your File, Class or Function");
+        alert("Please Name Your File");
         return;
     }
     
-    if (name != "" && name != nameMessage)
-    {
-        $.post("json/save.php", {data:graph.toJSON(), name:name}, function(data){
+    $.post("json/save.php", {data:graph.toJSON(), name:name}, function(data){
         alert("Your file was saved.");
-        });
-        return;
-    }
-
-/*    
-    if ((cname != "" && cname != cnameMessage) && (fname != "" && fname != fnameMessage))
-    {
-        var cfname = cname + "_" + fname;
-        $.post("json/save.php", {data:graph.toJSON(), name:cfname}, function(data){
-        alert("Your file was saved.");
-        });
-        return;
-    }
-*/
-    if (cname != "" && cname != cnameMessage)
-    {
-        $.post("json/save.php", {data:graph.toJSON(), name:cname}, function(data){
-        alert("Your file was saved.");
-        });
-        return;
-    }
-    
+    });
+  
   }//end of saveFile
   
   //if the open control window is displayed,
   //then if the user click the mouse on the canvas
   //the open window fades out
   $("#canvas").mousedown(function(){
+    clearNames();
     openWin.fadeOut();
     classWin.fadeOut();
+    gVarWin.fadeOut();
+    composeWin.fadeOut();
   });
   
   //open menu is click, list all the 
@@ -176,8 +143,8 @@ $(function(){
     saveFile();
   });
 
-  //open menu is click, list all the 
-  //saved .json files
+  //source menu is click, list all the 
+  //.js files in MainMenu
   $("#sourceView").click(function(){
     var fileList =  $("#classes");
     fileList.html("<div>loading...<\/div>");
@@ -186,24 +153,14 @@ $(function(){
   });
 
   //handle the inherit button click 
-  $("#inherit").click(function(){
-    //get the saved file project that you wish
-    //to see the inheritance view
-    /*var name = filename.val();
-    if (name == "" || name == nameMessage){
-      alert("Please enter project name for inheritance view");
-      return;
-    }*/
-    
+  $("#inherit").click(function(){    
     var name = prompt("Message", "Enter Class Name For The Inheritance View");
-    
-    //get the JSON file with this filename if any
-    //0 will be replaced with an enum to indicate 
-    //what kind of file is being retrieved.
-    //The indicator will decide whether the filename
-    //being displayed in the Name: field
-    retrieveJSON(name, 0);
 
+    $.getJSON("MainMenu/InheritanceView/" + name + ".json", {n:Math.random()}, function(data){
+    //get the graph data and put it on the canvas
+    graph.fromJSON(data);
+    });
+    
   });//end of inherit button handler
   
   $("#composeView").click(function(){
@@ -212,17 +169,26 @@ $(function(){
       alert("Please Enter Class Name For Composition View");
       return;
     }
-
-    //get the JSON file with this filename if any
-    retrieveJSON(name, 1);
     
+    var clist = getComposeNodes(name);
+
+    //global variable menu is click, list all the 
+    //saved .json files in MainMenu/GlobalVariables
+    var fileList =  $("#compose_nodes");
+    fileList.html("<div>loading...<\/div>");
+    classWin.fadeOut();
+    composeWin.fadeIn();
+    fileList.load("json/getCompose.php?"+Math.random()*1000000, {data:clist});
   }); //end of composition view 
   
-  $("#gVariable").click(function(){
-    //prompt the user to enter the global variable
-    //input value will be saved to inputVar
-    var inputVar = prompt("Message", "Enter Global Variable Name"); 
-    retrieveJSON(inputVar, 2);  
+  $("#gVariable").click(function(){    
+    //global variable menu is click, list all the 
+    //saved .json files in MainMenu/GlobalVariables
+    var fileList =  $("#globalvars");
+    fileList.html("<div>loading...<\/div>");
+    gVarWin.fadeIn();
+    fileList.load("json/g_variables.php?"+Math.random()*1000000);
+
   }); //end of global variable view
   
   $("#functionView").click(function(){
@@ -231,33 +197,20 @@ $(function(){
     var cInput = prompt("Message", "Enter Class Name"); 
     var fInput = prompt("Message", "Enter Function Name");
 
-    var URL = "/myZnode/src/source/" + cInput + ".js";
-    var childWin = window.open(URL, cInput);
-    //set a timer to wait until the chile window is loaded
-    //before processing the highlight.
-    var loadTimer = self.setInterval(function() {graph.highlightText(childWin, fInput);}, 3000);
-    graph.setLoadTimer(loadTimer);
-    
-    
-/*
-    var cname = classname.val();
-    var fname = functionname.val();
-    
-    //If either the class or function name
-    //is empty, put up alert and request can't
-    //be executed.
-    if ((cname == "" || cname == cnameMessage) ||
-        (fname == "" || fname == fnameMessage))
+    if (cInput == null || fInput == null)
     {
-      alert("Please Enter Function And Class Names");
-      return;
+        //User cancelled action
+        return;
     }
-
-    var joinName = cname + "_" + fname;
-    
-    //get the JSON file with this filename if any    
-    retrieveJSON(joinName, 3);
-*/
+    else
+    {
+        var URL = "/myZnode/src/MainMenu/" + cInput + ".js";
+        var childWin = window.open(URL, cInput);
+        //set a timer to wait until the chile window is loaded
+        //before processing the highlight.
+        var loadTimer = self.setInterval(function() {graph.highlightText(childWin, fInput);}, 3000);
+        graph.setLoadTimer(loadTimer);
+    }
   }); //end of function view
   
     //Process the click action when a saved file
@@ -270,7 +223,13 @@ $(function(){
         //Data will be retrieved from current directory/files/
 
         //get the JSON file with this filename if any
-        retrieveJSON(name, 0);
+        $.getJSON("files/" + name + ".json", {n:Math.random()}, function(data){
+        //get the graph data and put it on the canvas
+        graph.fromJSON(data);
+        //get the file name and put it in the form name field Name: 
+        filename.val(name);
+        });
+
     }).live('mouseover', function(){
        $(this).css({"background-color": "#ededed"});
     }).live("mouseout", function(){
@@ -281,30 +240,110 @@ $(function(){
     //in the source class window.
     $(".classFile").live('click', function() {
         var name = $(this).text();
-        var URL = "/myZnode/src/source/" + name + ".js";
-        var childWin = window.open(URL, name);
-        //set a timer to wait until the chile window is loaded
-        //before processing the highlight.
-        var loadTimer = self.setInterval(function() {graph.highlightText(childWin, "GameObject");}, 3000);
-        graph.setLoadTimer(loadTimer);
-            
+        var URL = "/myZnode/src/MainMenu/" + name + ".js";
+        var childWin = window.open(URL, name);            
     }).live('mouseover', function(){
       $(this).css({"background-color": "#ededed"});
     }).live("mouseout", function(){
       $(this).css({"background-color": "white"});
-    }); //end of file live  
+    }); //end of class files live  
 
-    function retrieveJSON(name, viewType)
-    {
-        $.getJSON("files/" + name + ".json", {n:Math.random()}, function(data){
-        //get the graph data and put it on the canvas
-        graph.fromJSON(data);
-        if (viewType == 0)
+    //Process the click action when a source file
+    //in the source class window.
+    $(".composeFile").live('click', function() {
+        var name = $(this).text();
+        if (name != "Empty")
         {
-            //get the file name and put it in the form name field Name: 
-            filename.val(name);
+            var cname = classname.val();
+            var URL = "/myZnode/src/MainMenu/" + name + ".js";
+            var childWin = window.open(URL, name);            
+            //set a timer to wait until the chile window is loaded
+            //before processing the highlight.
+            var loadTimer = self.setInterval(function() {graph.composeClass(childWin, cname);}, 3000);
+            graph.setLoadTimer(loadTimer);
         }
+        else
+        {
+            alert("Invalid Class Name.  No Data!");
+        }
+    }).live('mouseover', function(){
+      $(this).css({"background-color": "#ededed"});
+    }).live("mouseout", function(){
+      $(this).css({"background-color": "white"});
+    }); //end of class files live  
+    
+    //Process the click action when a global variable file
+    //in the global variable window.
+    $(".gVarFile").live('click', function() {
+        var name = $(this).text();
+        //get the saved .json files for the global variables information
+        $.getJSON("MainMenu/GlobalVariables/" + name + ".json", {n:Math.random()}, function(data){
+            classWin.fadeOut();
+            gVarWin.fadeOut();
+            //get the graph data and put it on the canvas
+            graph.fromJSON(data);
         });
-    }  
+    }).live('mouseover', function(){
+      $(this).css({"background-color": "#ededed"});
+    }).live("mouseout", function(){
+      $(this).css({"background-color": "white"});
+    }); //end of global variable files live  
+        
+    //This function specify the nodes that contain the 
+    //class entered by the user for the composition view
+    function getComposeNodes(cName)
+    {
+        //define a local array
+        var composeNodes = [];
+        
+        switch (cName)
+        {
+            case "AnimatedGameObject":
+                composeNodes = ["GameObjectManager", "LevelEndPost", "Player", "Powerup"];
+                break;
+            case "ApplicationManager":
+                composeNodes = ["GameObjectManager", "LevelEndPost", "MainMenu", "Powerup"];
+                break;            
+            case "GameObject":
+                composeNodes = ["VisualGameObject", "GameObjectManager"];                
+                break;
+            case "GameObjectManager":
+                composeNodes = ["ApplicationManager", "Main"];
+                break;
+            case "Level":
+                composeNodes = ["GameObjectManager", "Player"];
+                break;
+            case "LevelEndPost":
+                composeNodes = ["GameObjectManager", "Level"];
+                break;
+            case "MainMenu":
+                composeNodes = ["ApplicationManager", "GameObjectManager"];
+                break;
+            case "Player":
+                composeNodes = ["ApplicationManager", "GameObjectManager"];
+                break;
+            case "Powerup":
+                composeNodes = ["GameObjectManager", "Level"];
+                break;
+            case "Rectangle":
+                composeNodes = ["ApplicationManager", "LevelEndPost", "Powerup", "VisualGameObject"];
+                break;
+            case "RepeatingGameObject":
+                composeNodes = ["ApplicationManager", "GameObjectManager"];
+                break;
+            case "ResourceManager":
+                composeNodes = ["GameObjectManager"];
+                break;
+            case "VisualGameObject":
+                composeNodes = ["AnimatedGameObject", "GameObjectManager", "Level", "LevelEndPost", "MainMenu", "Powerup", "RepeatingGameObject"];
+                break;
+            default:
+                composeNodes = ["Empty"];
+                break;
+        }
+        
+        //return the array list of nodes for the composition view listing
+        return composeNodes;
+    }
     
 });

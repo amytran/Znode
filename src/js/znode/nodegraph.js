@@ -27,10 +27,8 @@ function NodeGraph(){
   function resizePaper(w, h){
     //paper.setSize(win.width(), win.height() - topHeight);
     paper.setSize(w, h);
-    console.log("resize paper width: " + w + " height: " + h);
   }
   win.resize(resizePaper(win.width(), win.height() - topHeight));
-  console.log("win resize");
   resizePaper(win.width(), win.height() - topHeight);
  
   canvas.append("<ul id='menu'><li>Left<\/li><li>Right<\/li><li>Top<\/li><li>Bottom<\/li><\/ul>");
@@ -66,21 +64,9 @@ function NodeGraph(){
     var spWidth = $(".scroll-pane").css("width", $(window).width()),
         spHeight = $(".scroll-pane").css("height", $(window).height() - ($("#controls").height() * 2));
     
-/*  console.log("spWidth: " + spWidth.width());
-    console.log("spHeight: " + spHeight.height());
-*/
     var scWidth = $(".scroll-content").css("width", $("#canvas").width()),
         scHeight = $(".scroll-content").css("height", $("#canvas").height());
     
-    //var scWidth = $(".scroll-content").css("width", graph.getCurrentNode().width()),
-    //  scHeight = $(".scroll-content").css("height", graph.getCurrentNode().height());
-    
-/*  console.log("scWidth: " + scWidth.width());
-    console.log("scHeight: " + scHeight.height());
-*/      
-    //$(".scroll-pane").prepend("<div class='scroll-bar-vertical'/>");
-    //if I do a prepend of the canvas, the background theme also will be removed
-    //$(".scroll-pane").prepend("<div class='scroll-bar-vertical'/>");
     var vBarHeight = $(".scroll-bar-vertical").height( 
             ($('.scroll-pane').height() - $("#controls").height()));
     
@@ -88,10 +74,6 @@ function NodeGraph(){
         orientation: 'vertical',
         value: 100,
         slide: function(event, ui) {
-/*      console.log("scrollC height: " + scrollContent.height());
-        console.log("scrollP height " + scrollPane.height());
-        console.log("bar value " + ui.value);
-*/
         if ( scrollContent.height() > scrollPane.height() ) {
             scrollContent.css( "margin-top", Math.round(
                 (100 - ui.value)/ 100 * ( scrollPane.height() - scrollContent.height() )
@@ -102,14 +84,10 @@ function NodeGraph(){
         }
     });
 
-    //$(".scroll-pane").append("<div class='scroll-bar'/>");
     $(".scroll-bar").width($('.scroll-pane').width());
     
     var scrollbar = $( ".scroll-bar" ).slider({
         slide: function( event, ui ) {
-/*      console.log("scrollC width: " + scrollContent.width());
-        console.log("scrollP width: " + scrollPane.width());
-*/
         if ( scrollContent.width() > scrollPane.width() ) {
                 scrollContent.css( "margin-left", Math.round( 
                     ui.value / 100 * ( scrollPane.width() - scrollContent.width() )
@@ -145,7 +123,7 @@ function NodeGraph(){
     node = new Node(x, y, currentNode.width(), currentNode.height());
     saveConnection(node, dir);
     currentNode = node;
-  }
+  }//end of connectNode
   
   function createConnection(a, conA, b, conB){
       var link = paper.path("M 0 0 L 1 1");
@@ -190,7 +168,7 @@ function NodeGraph(){
         delete connections[this.raphael.id];
       }
     });
-  }
+  }//end of saveConnection
   
   canvas.mousedown(function(e){
     if (menu.css("display") == "block"){
@@ -261,7 +239,7 @@ function NodeGraph(){
           }
         }
       }
-    }
+    } //end of for loop
     hitConnect.css("left", "-100px");
     
     if (newNode){
@@ -287,7 +265,7 @@ function NodeGraph(){
           connectNode(dir);
         }
       }
-    }
+    }//end of newNode if statement
     newNode = false;
     
     for (var i in loops){
@@ -299,7 +277,7 @@ function NodeGraph(){
     loops = [];
     
     if (creatingNewNode) currentNode.txt[0].focus();
-  });
+  }); //end of mouseDown and mouseUp
   
   function toGlobal(np, c){
     var l = c.position();
@@ -464,12 +442,16 @@ function NodeGraph(){
         //Otherwise, alert user to enter the node name
         if (nName.val() != "")
         {
+            //The src button of selected class node 
             cInput = nName.val();
-            var URL = "/myZnode/src/source/" + cInput + ".js";
+            //Set the inherit functions and variables to be highlighted
+            var inheritVarFunctArray = getHighlightText(cInput);
+            //set the URL for the window.open
+            var URL = "/myZnode/src/MainMenu/" + cInput + ".js";
             var newWin = window.open(URL, cInput);
             //set a timer to wait until the chile window is loaded
             //before processing the highlight.
-            var loadTimer = self.setInterval(function() {setHighlightTerms(newWin, "GameObject");}, 3000);
+            var loadTimer = self.setInterval(function() {setHighlightTerms(newWin, inheritVarFunctArray);}, 3000);
             setTimer(loadTimer);
         }
         else
@@ -727,6 +709,11 @@ function NodeGraph(){
     currentConnection = null;
   }
   
+  this.createDefaultNode = function()
+  {
+    defaultNode();
+  }
+  
   function defaultNode(){
     
     /*
@@ -740,7 +727,8 @@ function NodeGraph(){
     var temp = new Node(win.width() / 2 - defaultWidth / 2, 
                         win.height() / 2 - defaultHeight / 2,
                         defaultWidth, defaultHeight, true);
-    temp.txt[0].focus();  //focus the cursor in the node for text input
+    temp.name[0].focus();  //focus the cursor in the node for text input
+    //temp.txt[0].focus();  //focus the cursor in the node for text input
     currentNode = temp;
   }
   //defaultNode(); //call to create the default node
@@ -820,6 +808,11 @@ function NodeGraph(){
     setHighlightTerms(searchWin, searchText);
   }
   
+  /*****************************************************************
+   * setHighlightTerms and doHighlight functions are obtained from *
+   * http://www.nsftools.com/misc/SearchAndHighlight.htm           *
+   ****************************************************************/
+  
   function setHighlightTerms(searchWin, searchText)
   {    
     //set the Highlight tags
@@ -842,12 +835,12 @@ function NodeGraph(){
     }
     
     searchWin.document.body.innerHTML = bodyText;
-    console.log("bodyText is: " + searchWin.document.body.innerHTML);
     alert("Highlight completed");
     self.clearInterval(getTimer()); 
     
-  }
+  }//end of setHighlightTerms
   
+  //Update the html contents with the highlight tags
   function doHighlight(bodyText, searchTerm, highlightStartTag, highlightEndTag)
   {
     var newText = "";
@@ -855,9 +848,6 @@ function NodeGraph(){
     var lcSearchTerm = searchTerm.toLowerCase();
     var lcBodyText = bodyText.toLowerCase();
 
-    console.log("got in doHighlight: " + lcSearchTerm);
-    console.log("got in doHighlight: " + bodyText);
-    
     while(bodyText.length > 0)
     {
         i = lcBodyText.indexOf(lcSearchTerm, i+1);
@@ -877,8 +867,10 @@ function NodeGraph(){
         }
     }
     return newText;
-  }
+  }//end of doHighlight
   
+  //This function allows other files to access the data
+  //in the NodeGraph class
   this.setLoadTimer = function(t)
   {
     setTimer(t);
@@ -893,21 +885,94 @@ function NodeGraph(){
   {
     return timerID;
   }
+  
+  //This function define the list of inherited functions and variables
+  //that will be highlighted for the inheritance view.
+  function getHighlightText(cName)
+  {
+    if (cName == "VisualGameObject")
+    {
+        inheritData = "GameObject this.x this.y this.zOrder this.startupGameObject this.shutdownGameObject this.shutdown";
+    }
+    else if (cName == "RepeatingGameObject" || cName == "MainMenu" || cName == "AnimatedGameObject")
+    {
+        inheritData = "this.x this.y this.zOrder this.startupGameObject this.shutdownGameObject this.startupVisualGameObject this.draw this.shutdownVisualGameObject this.shutdown this.collisionArea";
+    }
+    else 
+    {
+        inheritData = "this.x this.y this.zOrder this.image this.currentFrame this.timeBetweenFrames this.timeSinceLastFrame this.frameWidth this.startupVisualGameObject this.draw this.shutdownVisualGameObject this.shutdown this.collisionArea this.startupAnimatedGameObject this.setAnimation this.draw this.shutdown this.collisionArea";
+    }
+    
+    return inheritData;
+  }//end of getHighlightText
+  
+  
+  //Put together the specific classes' functions and variables
+  //needed to be hightlighted for the composition view
+  this.composeClass = function(childWin, classname)
+  {
+    //Define the including composition class functions and variables
+    //that will need to be highlighted
+    
+    var highlightText = "";
 
-  this.getCurrentNode = function()
-  {
-    return currentNode;
-  }
-  
-  this.getCurrNodeHeight = function()
-  {
-    return currentNode.height();
-  }
-  
-  this.getCurrNodeWidth = function()
-  {
-    return currentNode.Width();
-  }
-
-  
-}
+    switch(classname)
+    {        
+        case "AnimatedGameObject":
+            highlightText = "this.currentFrame this.timeBetweenFrames this.timeSinceLastFrame this.frameWidth startupAnimatedGameObject setAnimation draw shutdown collisionArea";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "ApplicationManager":
+            highlightText = "startupApplicationManager startLevel openMainMenu updateScore this.canvasWidth this.canvasHeight";
+            setHighlightTerms(childWin, highlightText);
+            break;            
+        case "GameObject":
+            highlightText = "this.zOrder this.x this.y startupGameObject shutdownGameObject shutdown";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "GameObjectManager":
+            highlightText = "this.loadingScreenColspeed this.loadingScreenColDirection this.loadingScreenCol this.resourcesLoaded this.canvasSupported this.backBufferContext2D this.backBuffer this.context2D this.canvas this.yScroll this.xScroll this.lastFrame this.removeGameObjects this.addedGameObjects this.gameObjects removeGameObject removeOldGameObjects keyDown keyUp addNewGameObjects addGameObject shutdownAll draw startupGameObjectManager";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "Level":
+            highlightText = "this.block this.powerup this.blockWidth this.blockHeight startupLevel addBlocks addPowerups currentBlock groundHeight";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "LevelEndPost":
+            highlightText = "startupLevelEndPost shutdown shutdownLevelEndPost update";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "MainMenu":
+            highlightText = "startupMainMenu keyDown";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "Player":
+            highlightText = "this.jumpHeight this.halfPI this.jumpHangTime this.jumpSinWaveSpeed this.jumpSinWavePos this.fallMultiplyer this.grounded this.speed this.left this.right this.screenBorder startupPlayer keyDown keyUp updateAnimation update";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "Powerup":
+            highlightText = "this.value this.sineWavePos this.bounceTime this.bounceHeight startupPowerup shutdownPowerup shutdown update";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "Rectangle":
+            highlightText = "this.left this.top this.width this.height startupRectangle intersects";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "RepeatingGameObject":
+            highlightText = "this.width this.height this.scrollFactor startupRepeatingGameObject shutdownstartupRepeatingGameObject draw drawRepeat";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "ResourceManager":
+            highlightText = "startupResourceManager this.imageProperties";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        case "VisualGameObject":
+            highlightText = "startupVisualGameObject draw shutdownVisualGameObject shutdown collisionArea this.image";
+            setHighlightTerms(childWin, highlightText);
+            break;
+        default:
+            alert("Invalid class name entered.  Search failed!");
+            break;
+    }//end of switch
+  }//end of composeClass
+}//end of NodeGraph

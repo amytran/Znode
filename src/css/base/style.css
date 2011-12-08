@@ -53,39 +53,6 @@ aside {
   font-size : 14px;
 }
 
-nav#codeMenu{ 
-  padding: 17px 8px 13px 8px;
-  height : 10px;
-  margin: 0px 0px 0px 2px;
-  float : left;
-  cursor : pointer;
-  font-family: Georgia, serif;
-  font-size : 12px;
-  background-color : #efefef;
-}
-
-nav#codeMenu ul li #subMenu {
-	position: absolute;
-	background-color: #970000;
-	height: 0;
-	z-index: -1;
-}
-
-nav#codeMenu ul li #subMenu li {
-	display: block;
-	text-align: center;
-	margin: 0 auto;
-}
-nav#codeMenu ul li #subMenu li a {
-	height: 0;
-	line-height: 0;
-	width: 150px;
-}
-
-#source:hover > #subMenu { z-index: 2 }
-#source:hover > #subMenu li a { height: 40px; line-height: 40px }
-
-
 #logo{
   position : relative;
   float : left;
@@ -150,6 +117,60 @@ nav#codeMenu ul li #subMenu li a {
   margin-top : 10px;
 }
 
+#gVarWin{
+  position : absolute;
+  top : 60px;
+  left : 800px;
+  width : 250px;
+  height : 510px;
+  background-color : #dcdcdc;
+  z-index : 6000;
+  display : none;
+}
+
+#globalvars{
+  position : relative;
+  margin : 10px;
+  background-color : white;
+  width : 230px;
+  height : 450px;
+  overflow : auto;
+}
+
+#gVarTitle{
+  font-family : Georgia, serif;
+  font-style : italic; 
+  margin-left : 10px;
+  margin-top : 10px;
+}
+
+#composeWin{
+  position : absolute;
+  top : 60px;
+  left : 1100px;
+  width : 250px;
+  height : 510px;
+  background-color : #dcdcdc;
+  z-index : 6000;
+  display : none;
+}
+
+#compose_nodes{
+  position : relative;
+  margin : 10px;
+  background-color : white;
+  width : 230px;
+  height : 450px;
+  overflow : auto;
+}
+
+#composeTitle{
+  font-family : Georgia, serif;
+  font-style : italic; 
+  margin-left : 10px;
+  margin-top : 10px;
+}
+
 form{
   padding :0;
   margin : 0;
@@ -167,17 +188,8 @@ input{
   padding : 10px 0px 0px 18px;
 }
 
-/* add the two new forms for the composition
- * and function views */
+/* add the new class form for the composition*/
 #classForm{
-  position : relative;
-  float : left;
-  font-family : Georgia, serif;
-  font-size : 12px;
-  padding : 10px 0px 0px 18px;
-}
-
-#functForm{
   position : relative;
   float : left;
   font-family : Georgia, serif;
@@ -196,7 +208,7 @@ li{
   list-style : none;
 }
 
-li, .file , .classFile{
+li, .file , .classFile, .gVarFile, .composeFile{
   font-size : 12px;
   margin: 0;
   cursor : pointer;

@@ -19,6 +19,7 @@
     <div id="overlay"></div>
     <div id="controls">
       <div id="logo" >Znode</div>
+      <div id="new" class="btn">New</div>
       <div id="save" class="btn">Save</div>
       <div id="open" class="btn">Open</div>
       <div id="clear" class="btn">Clear All</div>
@@ -29,21 +30,14 @@
          <input type="text" name="filename" id="filename" spellcheck="false"/>
         </form>
       </div>
-<!--      
-      <div id="code">
-        <nav id="codeMenu">
-            <ul>
-                <li id=source>
-                    <a href=#>Sources</a>
-                    <ul id=subMenu>
-                        <li><a href="/myZnode/src/source/Main.js">Main</a></li>
-                        <li><a href="/myZnode/src/source/MainMenu.js">MainMenu</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-      </div>
--->      
+      <div id="composeWin">
+        <div id="composeTitle">Composition View:</div>
+        <div id="compose_nodes"></div>
+      </div>	
+      <div id="gVarWin">
+        <div id="gVarTitle">Global Variables:</div>
+        <div id="globalvars"></div>
+      </div>	
       <div id="classWin">
         <div id="classTitle">Classes:</div>
         <div id="classes"></div>
@@ -60,15 +54,8 @@
 		 Class :
 		 <input type="text" name="classname" id="classname" size="15" spellcheck="false"/>
 		</form>
-	  </div>      
-      </div>
-<!--	  <div id="functForm">
-		<form id="functName">
-		 Funct :
-		 <input type="text" name="fname" id="functionname" size="15" spellcheck="false"/>
-		</form>
-	  </div>
--->
+	  </div> <!-- end of classForm -->     
+      </div> <!-- end of control -->
     <div class="main">
     <!-- aside is needed to put the vertical slider and not
          interfere with the canvas division -->

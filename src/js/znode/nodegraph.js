@@ -699,7 +699,6 @@ function NodeGraph(){
   var defaultHeight = 80;
   
   this.addNodeAtMouse = function(){
-    alert("Zevan");
     //var w = currentNode.width() || defaultWidth;
     //var h = currentNode.height() || defaultHeight;
     //var temp = new Node(mouseX, mouseY + 30, w, h);
